@@ -1,4 +1,4 @@
-rbe3002_lab4
+Final3002
 ============
 
-Lab 4 Git repository
+Final Project Git repository
