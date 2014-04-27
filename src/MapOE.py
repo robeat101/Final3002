@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 
+"""
+Created, tested and maintained by Rohit for RBE 3002 Final Project
+"""
 import rospy
 import copy
 from nav_msgs.msg import OccupancyGrid
 
+"""
+The purpose of this node is to expand obstacles from the /map topic and
+publish the new map to /map_OE. All references to OE stand for 
+Obstacle Expansion, Obstacle Expanded or something along those lines. 
+"""
 class MapOE:
     
     def beginOE(self, map):
@@ -49,20 +57,25 @@ class MapOE:
             new_map.data = tuple(new_data)
         
         self.OEmap.publish(new_map)
-        rospy.sleep(rospy.Duration(4,0))
-        
+        rospy.sleep(rospy.Duration(1,0))
+    
     def __init__(self, robotResolution = 0.2):
         # Initialize Node
-        rospy.init_node('rbansal_vcunha_dbourque_MapOptimization')
+        rospy.init_node('rbansal_vcunha_dbourque_MapOE')
         
         # Setup publisher and Subscriber
         self.OEmap = rospy.Publisher('/map_OE', OccupancyGrid, latch=True)
         self.map = rospy.Subscriber('/map', OccupancyGrid, self.beginOE, queue_size=1)
         
-        # Store robot resolution
+        # Store robot resolution (default is 0.2)
         self.robotResolution = robotResolution
         
 # This is the program's main function
 if __name__ == '__main__':
-    map_OE = MapOE()
+    
+    # Modify this in case of a different robot resolution
+    robotResolution = 0.2
+    
+    # Create MapOE object
+    map_OE = MapOE(robotResolution)
     rospy.spin()
