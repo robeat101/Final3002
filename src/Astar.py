@@ -8,6 +8,7 @@ import copy
 from nav_msgs.msg import OccupancyGrid, GridCells
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, PoseStamped, Twist, PointStamped
 import tf
+from math import sqrt
 from AStarNode import AStarNode
 from Direction import Direction
 
@@ -134,7 +135,7 @@ class Astar:
             self.PublishGridCells(self.pub_path, [])
             print "Showing Waypoints"
             waypoints = self.getWaypoints(path)
-            self.PublishGridCells(self.pub_path, waypoints)
+            self.PublishWayPoints(self.pub_path, waypoints)
     
     def getWaypoints(self, path):
         waypoints = []
@@ -154,8 +155,8 @@ class Astar:
 
     def AStar_search(self):
         #Set Start and End values
-        start.g = 0
-        start.h = heuristic(start, end)
+        self.start.g = 0
+        self.start.h = self.heuristic(self.start, self.end)
         rospy.sleep(rospy.Duration(0.1,0))
         
         #FrontierSet is the set of nodes to be opened, i.e. Frontier
@@ -164,7 +165,189 @@ class Astar:
         ExpandedSet = set()
         
         #Add Start to frontier
-    FrontierSet.add(start)
+        FrontierSet.add(self.start)
+        
+        while FrontierSet:
+            self.PublishGridCells(self.pub_frontier, FrontierSet)
+            self.PublishGridCells(self.pub_explored, ExpandedSet)
+            self.PublishGridCells(self.pub_start, [self.start])
+            self.PublishGridCells(self.pub_end, [self.end])
+            
+            #find the node in FrontierSet with the minimum heuristic value
+            current = min(FrontierSet, key=lambda o:o.g + o.h)
+            #If the goal is being expanded
+            if current.poseEqual(self.end):
+                #Construct path
+                path = []
+                repeatedNode_flag = False
+                FrontierSet.remove(current)
+                
+                while current.parent:
+                    path.append(current)
+                    current = current.parent
+                    
+                    #remove current node from ExpandedSet
+                    for expanded in ExpandedSet:
+                        if current.poseEqual(expanded):
+                            ExpandedSet.remove(expanded)
+                            break
+                    path.append(current)
+                
+                
+                for frontier in FrontierSet:
+                    if self.end.poseEqual(frontier):
+                        FrontierSet.remove(frontier)
+
+                rospy.sleep(rospy.Duration(.2,0))
+                #update gridcells
+                self.PublishGridCells(self.pub_explored, ExpandedSet)
+                self.PublishGridCells(self.pub_frontier, FrontierSet)
+                
+                #Return path (less one garbage node that is appended and less the start node)
+                return path[1:-1]
+            #Else, move node from frontier to explored
+            FrontierSet.remove(current)
+            
+            if not (current.poseEqual(self.start) or current.poseEqual(self.end)):
+                ExpandedSet.add(current)
+                
+            #Check for possible 8-directional moves
+            repeatedNode_flag = False
+            somethingWasUpdatedFlag = False
+            
+            nodesToGo = self.WhereToGo(current)
+            if nodesToGo == []:
+                return []
+                
+            for node in nodesToGo:
+                #Ignore if node is expanded
+                for expanded in ExpandedSet:
+                    if node.poseEqual(expanded):
+                        new_g = current.g + self.move_cost(current,node)
+                        if node.g > new_g:
+                            node.g = new_g
+                            node.h = self.heuristic(node, self.end)
+                            node.parent = current
+                        repeatedNode_flag = True
+                        somethingWasUpdatedFlag = True
+                        break   
+            
+                #Try to update cost of traveling to node if already exists
+                for frontier in FrontierSet:
+                    if node.poseEqual(frontier) and repeatedNode_flag == False:
+                        new_g = current.g + self.move_cost(current,node)
+                        if node.g > new_g:
+                            node.g = new_g
+                            node.h = self.heuristic(node, self.end)
+                            node.parent = current
+                            FrontierSet.remove(frontier)
+                            FrontierSet.add(node)
+                        somethingWasUpdatedFlag = True
+                        break
+                    if somethingWasUpdatedFlag == True:
+                        break
+                #Add to frontier and update costs and heuristic values
+                if somethingWasUpdatedFlag == False:
+                    node.g = current.g + self.move_cost(current, node)
+                    node.h = self.heuristic(node, self.end)
+                    node.parent = current
+                    FrontierSet.add(node)
+                repeatedNode_flag = False
+                somethingWasUpdatedFlag = False
+        return None
+    
+    #this needs to be universalized for other maps
+    def getMapIndex(self, node):        
+        a = (((node.point.y - self.map.info.origin.position.y) / self.robotResolution) * self.map.info.width)
+        a = a + ((node.point.x - self.map.info.origin.position.x) / self.robotResolution)
+        return int(round(a,2))
+
+    def move_cost(self, node, next):        
+        
+        map_data = self.map.data
+        if(node.step_direction == next.step_direction):
+            return round(self.robotResolution * (20 + map_data[self.getMapIndex(next)]), 3)
+        else:
+            step_diff = abs(node.step_direction - next.step_direction)
+            if step_diff >= 4: 
+                step_diff = 8 - step_diff
+            return round(self.robotResolution * (20 + map_data[self.getMapIndex(next)]), 3) + step_diff * 2
+        
+    #Takes in current node, returns list of possible directional movements
+    def WhereToGo(self, node):
+        
+        diagonal_distance = sqrt(2) * self.robotResolution
+        map_data = self.map.data
+        possibleNodes = []
+    
+        direction = Direction()
+        #Hacky code begins
+        North = AStarNode(round(node.point.x,3), round(node.point.y+self.robotResolution,3))
+        North.g = node.g + self.robotResolution
+        North.step_direction = direction.n
+        
+        NorthEast = AStarNode(round(node.point.x+self.robotResolution,3), round(node.point.y+self.robotResolution,3))
+        NorthEast.g = node.g + diagonal_distance
+        NorthEast.step_direction = direction.ne
+        
+        East = AStarNode(round(node.point.x+self.robotResolution,3), round(node.point.y, 3))
+        East.g = node.g + self.robotResolution
+        East.step_direction = direction.e
+        
+        SouthEast = AStarNode(round(node.point.x+self.robotResolution,3), round(node.point.y-self.robotResolution,3))
+        SouthEast.g = node.g + diagonal_distance
+        SouthEast.step_direction = direction.se
+        
+        South = AStarNode(round(node.point.x, 3), round(node.point.y-self.robotResolution,3))
+        South.g = node.g + self.robotResolution
+        South.step_direction = direction.s
+        
+        SouthWest = AStarNode(round(node.point.x-self.robotResolution,3), round(node.point.y-self.robotResolution,3))
+        SouthWest.g = node.g + diagonal_distance
+        SouthWest.step_direction = direction.sw
+        
+        West = AStarNode(round(node.point.x-self.robotResolution,3), round(node.point.y, 3))
+        West.g = node.g + self.robotResolution
+        West.step_direction = direction.w
+        
+        NorthWest = AStarNode(round(node.point.x-self.robotResolution,3), round(node.point.y+self.robotResolution,3))
+        NorthWest.g = node.g + diagonal_distance
+        NorthWest.step_direction = direction.nw
+        
+        if(self.getMapIndex(North) < len(map_data) and self.getMapIndex(North) > 0):
+            if (map_data[self.getMapIndex(North)] != 100):
+                possibleNodes.append(North)
+                
+        if(self.getMapIndex(NorthEast) < len(map_data) and self.getMapIndex(NorthEast) > 0):
+            if (map_data[self.getMapIndex(NorthEast)] != 100):
+                possibleNodes.append(NorthEast)
+                
+        if(self.getMapIndex(East) < len(map_data) and self.getMapIndex(East) > 0):
+            if (map_data[self.getMapIndex(East)] != 100 ):
+                possibleNodes.append(East)
+                
+        if(self.getMapIndex(SouthEast) < len(map_data) and self.getMapIndex(SouthEast) > 0):
+            if (map_data[self.getMapIndex(SouthEast)] != 100):
+                possibleNodes.append(SouthEast)
+                
+        if(self.getMapIndex(South) < len(map_data) and self.getMapIndex(South) > 0):
+            if (map_data[self.getMapIndex(South)] != 100):
+                possibleNodes.append(South)
+                
+        if(self.getMapIndex(SouthWest) < len(map_data) and self.getMapIndex(SouthWest) > 0):
+            if (map_data[self.getMapIndex(SouthWest)] != 100):
+                possibleNodes.append(SouthWest)
+                
+        if(self.getMapIndex(West) < len(map_data) and self.getMapIndex(West) > 0):
+            if (map_data[self.getMapIndex(West)] != 100):
+                possibleNodes.append(West)
+                
+        if(self.getMapIndex(NorthWest) < len(map_data) and self.getMapIndex(NorthWest) > 0):
+            if (map_data[self.getMapIndex(NorthWest)] != 100):
+                possibleNodes.append(NorthWest)
+    
+        return possibleNodes
+
     def map_function(self, map):
         
         self.map_available = True
@@ -172,7 +355,29 @@ class Astar:
         if(self.goal_set):
             self.run_Astar()   
             
-    #Publish Explored Cells function
+            
+    def PublishWayPoints(self, publisher, nodes):
+        rospy.sleep(rospy.Duration(0.1,0))
+        #Initialize gridcell
+        gridcells = GridCells()
+        gridcells.header.frame_id = 'map'
+        gridcells.cell_width = self.robotResolution
+        gridcells.cell_height = self.robotResolution
+        
+        if nodes == None:
+            return
+        #Iterate through list of nodes
+        for node in nodes: 
+            point = Point()
+            point.x = node.point.x
+            point.y = node.point.y
+            #Ensure z axis is 0 (2d Map)
+            point.z = node.point.z = 0
+            gridcells.cells.append(point)        
+        publisher.publish(gridcells)
+        rospy.sleep(rospy.Duration(0.1,0))
+    
+    #Publish Grid Cells function
     def PublishGridCells(self, publisher, nodes):
         #Initialize gridcell
         gridcells = GridCells()
