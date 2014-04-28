@@ -5,8 +5,10 @@ Created, tested and maintained by Rohit for RBE 3002 Final Project
 """
 import rospy
 import copy
-from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid, GridCells
+from geometry_msgs.msg import Point, PoseWithCovarianceStamped, PoseStamped, Twist, PointStamped
 import tf
+from AStarNode import AStarNode
 
 """
 The purpose of this node is to expand obstacles from the /map topic and
@@ -24,7 +26,11 @@ class Astar:
     # set and print initialpose
     def set_initial_pose(self):
         
-        (trans, rot) = self.getOdomTransform()
+        try:
+            (trans, rot) = self.getOdomTransform()
+        except:
+            rospy.logwarn("Odometry Data unavailable. Using default start")
+            return
         
         #rospy.spin()
         self.start.point.x = trans[0]
@@ -89,8 +95,22 @@ class Astar:
         print "end_pos_x = ", self.end.point.x
         print "end_pos_y = ", self.end.point.y 
         self.set_initial_pose()
+        self.goal_set = True
         
+        if(self.map_available):
+            self.run_Astar()    
+      
+    def run_Astar(self):
+        self.goal_set = False
     
+    def map_function(self, map):
+        self.map_available = True
+        
+        # Map stuff here
+        
+        if(self.goal_set):
+            self.run_Astar()   
+        
     def __init__(self, robotResolution = 0.2):
         # Initialize Node
         rospy.init_node('rbansal_vcunha_dbourque_astar')
@@ -102,6 +122,8 @@ class Astar:
         self.pub_explored = rospy.Publisher('/explored', GridCells) # Publisher explored GridCells
         self.pub_frontier = rospy.Publisher('/frontier', GridCells) # Publisher explored GridCells
         
+        self.map_available = False
+        self.goal_set = False
         
         print "Starting Astar"
         # Store robot resolution (default is 0.2)
