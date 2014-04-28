@@ -1,0 +1,7 @@
+<launch>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find final3002)/Config/config_OE.rviz"/>  
+    <node pkg="final3002" name="rbansal_vcunha_dbourque_MapOE" type="MapOE.py"/>
+ 	<node pkg="final3002" name="rbansal_vcunha_dbourque_MapOpt" type="MapOpt.py"/>
+    <node pkg="final3002" name="rbansal_vcunha_dbourque_astar" type="Astar.py"/>
+</launch>
+
