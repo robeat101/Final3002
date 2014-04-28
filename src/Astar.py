@@ -9,6 +9,7 @@ from nav_msgs.msg import OccupancyGrid, GridCells
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, PoseStamped, Twist, PointStamped
 import tf
 from AStarNode import AStarNode
+from Direction import Direction
 
 """
 The purpose of this node is to expand obstacles from the /map topic and
@@ -17,7 +18,14 @@ Obstacle Expansion, Obstacle Expanded or something along those lines.
 """
 class Astar:
     
+    def heuristic(self, current, end):
+        self.h_const
+        x_2 = pow((current.point.x - end.point.x), 2)
+        y_2 = pow((current.point.y - end.point.y), 2)
+        h = sqrt(x_2+y_2)
+        return 20 * h / self.h_const
     
+       
     
     def getOdomTransform(self):
         self.odom_list.waitForTransform('map', 'base_footprint', rospy.Time(0), rospy.Duration(4.0))
@@ -102,14 +110,89 @@ class Astar:
       
     def run_Astar(self):
         self.goal_set = False
+        
+        self.PublishGridCells(self.pub_start, [self.start])
+        self.PublishGridCells(self.pub_end,   [self.end])
+        self.PublishGridCells(self.pub_path, [])
+        
+        # Use this command to make the program wait for some seconds
+        rospy.sleep(rospy.Duration(.1, 0))
+        
+        path = self.AStar_search()
+        print "h, change_x, change_y"
+        print self.start.h
+        print self.end.point.x - self.start.point.x
+        print self.end.point.y - self.start.point.y
+        
+        if path == [] or path == None:
+            print "No Path!"
+            return None
+        else:
+            print "Displaying Path"
+            self.PublishGridCells(self.pub_path, path)
+            rospy.sleep(rospy.Duration(1, 0))
+            self.PublishGridCells(self.pub_path, [])
+            print "Showing Waypoints"
+            waypoints = self.getWaypoints(path)
+            self.PublishGridCells(self.pub_path, waypoints)
     
+    def getWaypoints(self, path):
+        waypoints = []
+        direction = Direction()
+        previous = self.start
+        previous.direction = direction.start
+        
+        for node in path:
+            if(node.step_direction != previous.step_direction):
+                waypoints.append(node)
+                previous = node
+            else:
+                continue
+        waypoints.append(self.end)
+        
+        return waypoints    
+
+    def AStar_search(self):
+        #Set Start and End values
+        start.g = 0
+        start.h = heuristic(start, end)
+        rospy.sleep(rospy.Duration(0.1,0))
+        
+        #FrontierSet is the set of nodes to be opened, i.e. Frontier
+        FrontierSet = set()
+        #ExpandedSet is the set of nodes already expanded
+        ExpandedSet = set()
+        
+        #Add Start to frontier
+    FrontierSet.add(start)
     def map_function(self, map):
+        
         self.map_available = True
-        
-        # Map stuff here
-        
+        self.map = map
         if(self.goal_set):
             self.run_Astar()   
+            
+    #Publish Explored Cells function
+    def PublishGridCells(self, publisher, nodes):
+        #Initialize gridcell
+        gridcells = GridCells()
+        gridcells.header.frame_id = 'map'
+        gridcells.cell_width = self.robotResolution
+        gridcells.cell_height = self.robotResolution
+        
+        if nodes == None:
+            return
+        #Iterate through list of nodes
+        for node in nodes: 
+            point = Point()
+            point.x = node.point.x
+            point.y = node.point.y
+            #Ensure z axis is 0 (2d Map)
+            point.z = node.point.z = 0
+            gridcells.cells.append(point)        
+        publisher.publish(gridcells)
+        #rospy.sleep(rospy.Duration(0.05,0))
+
         
     def __init__(self, robotResolution = 0.2):
         # Initialize Node
@@ -122,15 +205,18 @@ class Astar:
         self.pub_explored = rospy.Publisher('/explored', GridCells) # Publisher explored GridCells
         self.pub_frontier = rospy.Publisher('/frontier', GridCells) # Publisher explored GridCells
         
-        self.map_available = False
-        self.goal_set = False
-        
+
         print "Starting Astar"
         # Store robot resolution (default is 0.2)
         self.robotResolution = robotResolution
 
         self.end = AStarNode(1,1.8);
         self.start = AStarNode(-1,-1.8)
+        
+        self.map_available = False
+        self.goal_set = False
+        self.h_const = 1
+        self.map = None
         
         # Set up odometry listener 
         self.odom_list = tf.TransformListener()
