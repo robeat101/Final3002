@@ -55,10 +55,12 @@ class MapOpt:
                     nodey = y * map_scale + node[1]
                     index = nodey * map_width + nodex
                     if(index >= 0 and index < len(map.data)):
-                        if(map.data[index] >= 0):
+                        if(map.data[index] > 0):
                             cost = cost + map.data[index]
+                        elif(map.data[index] == 0):
+                            cost = cost + 0
                         else:
-                            cost = cost + 20
+                            cost = cost + -1
                         nodes = nodes+1
                 cost = cost/nodes
                 if(cost > 60 ):
