@@ -436,7 +436,7 @@ class Astar:
         
         self.map_available = False
         self.goal_set = False
-        self.h_const = 1
+        self.h_const = .4
         self.map = None
         self.orientation = None
         
