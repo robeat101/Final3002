@@ -420,11 +420,11 @@ class Astar:
         rospy.init_node('rbansal_vcunha_dbourque_astar')
         
         # Setup publisher and Subscriber
-        self.pub_start    = rospy.Publisher('/start', GridCells) # Publisher for Start Point
-        self.pub_end      = rospy.Publisher('/end'  , GridCells) # Publisher for End Point
-        self.pub_path     = rospy.Publisher('/path' , GridCells) # Publisher for Final Path
-        self.pub_explored = rospy.Publisher('/explored', GridCells) # Publisher explored GridCells
-        self.pub_frontier = rospy.Publisher('/frontier', GridCells) # Publisher Frontier GridCells
+        self.pub_start    = rospy.Publisher('/rbefinal/astar/start', GridCells) # Publisher for Start Point
+        self.pub_end      = rospy.Publisher('/rbefinal/astar/end'  , GridCells) # Publisher for End Point
+        self.pub_path     = rospy.Publisher('/rbefinal/astar/path' , GridCells) # Publisher for Final Path
+        self.pub_explored = rospy.Publisher('/rbefinal/astar/explored', GridCells) # Publisher explored GridCells
+        self.pub_frontier = rospy.Publisher('/rbefinal/astar/frontier', GridCells) # Publisher Frontier GridCells
         self.pub_goal     = rospy.Publisher('/move_base_simple/goal', PoseStamped, latch=True) #Publisher for Nav Goal
 
         print "Starting Astar"
@@ -445,7 +445,7 @@ class Astar:
         self.odom_list = tf.TransformListener()
         
         sub = rospy.Subscriber('/clicked_point', PointStamped, self.set_goal_pose, queue_size=1)  
-        sub = rospy.Subscriber('/map_Opt', OccupancyGrid, self.map_function, queue_size=1)
+        sub = rospy.Subscriber('/rbefinal/map_Opt', OccupancyGrid, self.map_function, queue_size=1)
         sub = rospy.Subscriber('/odom', Odometry, self.readOdom, queue_size=5)
     
         

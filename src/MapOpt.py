@@ -77,8 +77,8 @@ class MapOpt:
         rospy.init_node('rbansal_vcunha_dbourque_MapOpt')
         
         # Setup publisher and Subscriber
-        self.optmap_pub = rospy.Publisher('/map_Opt', OccupancyGrid, latch=True)
-        self.OEmap_sub = rospy.Subscriber('/map_OE', OccupancyGrid, self.beginOpt, queue_size=1)
+        self.optmap_pub = rospy.Publisher('/rbefinal/map_Opt', OccupancyGrid, latch=True)
+        self.OEmap_sub = rospy.Subscriber('/rbefinal/map_OE', OccupancyGrid, self.beginOpt, queue_size=1)
         
         # Store robot resolution (default is 0.2)
         self.robotResolution = robotResolution

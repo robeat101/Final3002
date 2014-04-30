@@ -64,7 +64,7 @@ class MapOE:
         rospy.init_node('rbansal_vcunha_dbourque_MapOE')
         
         # Setup publisher and Subscriber
-        self.OEmap = rospy.Publisher('/map_OE', OccupancyGrid, latch=True)
+        self.OEmap = rospy.Publisher('/rbefinal/map_OE', OccupancyGrid, latch=True)
         self.map = rospy.Subscriber('/map', OccupancyGrid, self.beginOE, queue_size=1)
         
         # Store robot resolution (default is 0.2)
