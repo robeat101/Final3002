@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import rospy, tf
-import Movement
 import copy
 from nav_msgs.msg import GridCells, OccupancyGrid
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, PoseStamped, Twist, PointStamped
@@ -10,8 +9,6 @@ from math import sqrt
 from __builtin__ import pow
 from genpy.rostime import Duration
 import numpy
-import MapOE
-import MapOpt
 
 
 """
@@ -20,7 +17,7 @@ generate a path towards it.
 
 """
 
-class FrontierSearch:
+class BlobSearch:
     
     xy = [(-1, -1), (-1, 0), (0, -1),
          (-1, -1), (-1, 0),
@@ -37,7 +34,12 @@ class FrontierSearch:
     
     def getX(self, index):
         x, y = self.getXYindex(index)
-        
+        return x * self.msg.info.resolution + self.msg.origin.position.x
+    
+    def getY(self, index):
+        x, y = self.getXYindex(index)
+        return y * self.msg.info.resolution + self.msg.origin.position.y
+
     def getLabels(self, neighbors):
         label_values = []
         for neighbor in neighbors:
@@ -62,44 +64,46 @@ class FrontierSearch:
         # check 8 connectivity cells around the current xy
         for i in xrange(0, len(xy)):
             # check if current x, y are in range
-            if(self.isValidPoint(x + xy[0], y + xy[1])):
+            if(self.isValidPoint(x + xy[i][0], y + xy[i][1])):
                 #check if the cell has a label
-                a_label = self.labels(self.getMapIndex(x + xy[0], y + xy[1]))
+                a_label = self.labels[self.getMapIndex(x + xy[i][0], y + xy[i][1])]
                 if(a_label != -1):
-                    if(self.labels[self.getMapIndex(x,y)] == a_label):
-                        neighbors.append((x + xy[0], y + xy[1]))
+                    neighbors.append((x + xy[i][0], y + xy[i][1]))
         return neighbors
             
     def beginFS(self, msg):
         Background = -1
         linked = []
         NextLabel = 0
-        self.labels = [Background] * len(msg.info.width) * len(msg.info.height)
+        self.labels = [Background] * msg.info.width * msg.info.height
         self.msg = msg
         
         data = msg.data
-        
+        print "begin"
         # First pass
-        for x in xrange(0, len(msg.info.width)):
-            for y in xrange(0, len(msg.info.height)):
-                if data[self.getMapIndex(x, y)] is not Background:
+        for x in xrange(0, msg.info.width):
+            for y in xrange(0, msg.info.height):
+                if data[self.getMapIndex(x, y)] != Background:
                     neighbors = self.getConnected(x,y)
-                    if neighbors != []:
-                        linked.append(NextLabel)                   
-                        labels[self.getMapIndex(x,y)] = NextLabel
+                    print "neighbors" + str(neighbors)
+                    if neighbors == []:
+                        linked.append(set([NextLabel]))                   
+                        self.labels[self.getMapIndex(x,y)] = NextLabel
                         NextLabel = NextLabel + 1
                     else:
                        # Find the smallest label
                        L = self.getLabels(neighbors)
-                       labels[self.getMapIndex(x,y)] = min(L)
+                       print "L" + str(L)
+                       self.labels[self.getMapIndex(x,y)] = min(L)
                        for label in L:
-                           linked[label] = union(linked[label], L)
+                           linked[label] = set.union(linked[label], L)
         # Second pass
-        for x in xrange(0, len(msg.info.width)):
-            for y in xrange(0, len(msg.info.height)):
-                if data[self.getMapIndex(x,y)] is not Background:         
-                     labels[self.getMapIndex(x,y)] = find(labels[self.getMapIndex(x,y)])    
+        for x in xrange(0, msg.info.width):
+            for y in xrange(0, msg.info.height):
+                if data[self.getMapIndex(x,y)] !=  Background:         
+                     self.labels[self.getMapIndex(x,y)] = set.update(self.labels[self.getMapIndex(x,y)])    
         print "Done with both passes."
+        print "publishing"
         self.publishGridCells(labels)
         
         
@@ -122,7 +126,7 @@ class FrontierSearch:
             gridcells.cells.append(point)        
         publisher.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
-        
+        print "Done frontier Search"
         
     def __init__(self):
         # Initialize Node
@@ -133,14 +137,14 @@ class FrontierSearch:
         self.labels = []
         
         # Setup publisher and Subscriber
-        sub = rospy.Subscriber('/rbefinal/MapOpt', OccupancyGrid, self.beginFS, queue_size=1)
+        sub = rospy.Subscriber('/rbefinal/map_Opt', OccupancyGrid, self.beginFS, queue_size=1)
         self.blob_publish = rospy.Publisher('/rbefinal/blob', GridCells, latch = True)
         
 # This is the program's main function
 if __name__ == '__main__':
     
     # Create MapOE object
-    node = FrontierSearch()
+    node = BlobSearch()
     rospy.spin()
 
 
