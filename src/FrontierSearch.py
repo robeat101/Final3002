@@ -14,50 +14,30 @@ import MapOE
 import MapOpt
 
 
-global Searched_Flag
-global Front_set
-
-
-Front_set = set()
-
-Searched_Flag = True
-
 """
 The purpose of this node is to find out where the frontier is and  
 generate a path towards it. 
 
 """
 
-class FrontSearch:
+class FrontierSearch:
 
-   def readMap():
-
-
- 
-
-
-
-
-
-    def __init__(self, robotResolution = 0.2):
+    def beginFS(self):
+        pass
+    
+    def __init__(self):
         # Initialize Node
-        rospy.init_node('rbansal_vcunha_dbourque_MapOE')
+        rospy.init_node('rbansal_vcunha_dbourque_FrontierSearch')
         
         # Setup publisher and Subscriber
-        self.OEmap = rospy.Publisher('/front_search', OccupancyGrid, latch=True)
-        #self.map = rospy.Subscriber('/map', OccupancyGrid, self.beginOE, queue_size=1)
+        self.map = rospy.Subscriber('/rbefinal/MapOpt', OccupancyGrid, self.beginFS, queue_size=1)
         
-        # Store robot resolution (default is 0.2)
-        self.robotResolution = robotResolution
         
 # This is the program's main function
 if __name__ == '__main__':
     
-    # Modify this in case of a different robot resolution
-    robotResolution = 0.2
-    
     # Create MapOE object
-    map_OE = MapOE(robotResolution)
+    node = FrontierSearch()
     rospy.spin()
 
 
