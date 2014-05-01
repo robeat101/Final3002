@@ -48,14 +48,11 @@ class MapOE:
             # Expand obstacles
             for x in xrange(0, map.info.width):
                 for y in xrange(0, map.info.height):
-                    if(MapPosStatus[x,y] > 0):
+                    if(MapPosStatus[x,y] == 100):
                         for element in xy:
                              index = (y + element[1]) * map.info.width + (x + element[0])
                              if(index >= 0 and index < len(new_data)):
-                                 if(MapPosStatus[x + element[0], y + element[1]] < MapPosStatus[x,y]):
-                                    new_data[index] =  MapPosStatus[x,y]
-                    else:
-                        new_data[y * map.info.width + x] = -1
+                                    new_data[index] =  100
             # Convert and store data as tuples. 
             new_map.data = tuple(new_data)
         
@@ -68,7 +65,7 @@ class MapOE:
         
         # Setup publisher and Subscriber
         self.OEmap = rospy.Publisher('/rbefinal/map_OE', OccupancyGrid, latch=True)
-        self.map = rospy.Subscriber('/move_base/global_costmap/costmap', OccupancyGrid, self.beginOE, queue_size=1)
+        self.map = rospy.Subscriber('/map', OccupancyGrid, self.beginOE, queue_size=1)
         
         # Store robot resolution (default is 0.2)
         self.robotResolution = robotResolution
