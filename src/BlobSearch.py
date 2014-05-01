@@ -156,6 +156,7 @@ class BlobSearch:
             else:
                 
                 is_internal_count = True
+                has_known = False
                 x, y = self.getXYindex(i)
                 
                 for j in xrange(0, len(self.xy)): 
@@ -164,23 +165,24 @@ class BlobSearch:
                     coord = (round(coord[0]), round(coord[1]))
                     if(self.isValidPoint(coord[0], coord[1])):
                         if(self.labels[self.getMapIndex(coord[0], coord[1])] == -1 and self.msg.data[self.getMapIndex(coord[0], coord[1])] != 100):
+                            if(self.msg.data[self.getMapIndex(coord[0], coord[1])] in range(0,70)):
+                                has_known = True
                             is_internal_count = False
                             break
             
             if(is_internal_count):
                 continue
-            
-            label = copy.deepcopy(self.labels[i])
-            z = label.pop()
-            print "getting point"
-            point = Point()
-            point.x = self.getX(i)
-            point.y = self.getY(i)
-            point.z = z
-            #Ensure z axis is 0 (2d Map)
-            
-            gridcells.cells.append(point)
-        print self.labels    
+            elif(has_known):
+                label = copy.deepcopy(self.labels[i])
+                z = label.pop()
+                print "getting point"
+                point = Point()
+                point.x = self.getX(i)
+                point.y = self.getY(i)
+                point.z = z
+                #Ensure z axis is 0 (2d Map)
+                gridcells.cells.append(point)
+
         self.blob_publish.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
         print "Done Blob Search"
