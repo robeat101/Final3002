@@ -35,18 +35,21 @@ class Centroid:
         for cell in  msg.cells:
             if cell.z > numberOfFrontiers:
                 numberOfFrontiers = cell.z
-        
-        print numberOfFrontiers
+        #print msg.cells
+        print "number of frontiers = " + str(numberOfFrontiers)
         #determine closest frontier centroid
         for frontierNumber in range(int(numberOfFrontiers) + 1):
             currentFrontier = []
             for cell in msg.cells:
                 if cell.z == frontierNumber:
                     currentFrontier.append(cell)
-                print cell
-            print currentFrontier
+                #print cell
+            #print currentFrontier
             #calculate centroid of frontier being examined
-            currentCentroid = self.calcCentroid(currentFrontier)
+            if currentFrontier != []:
+                currentCentroid = self.calcCentroid(currentFrontier)
+            else:
+                continue
 
             #figure out which frontier cell is closest to its centroid
             closestCell.point.x = None
@@ -73,25 +76,32 @@ class Centroid:
             if self.calcDistance(currentCentroid,self.get_robot_position()) < self.calcDistance(closestCentroid,self.get_robot_position()):
                 closestCentroid.point.x = currentCentroid.point.x
                 closestCentroid.point.y = currentCentroid.point.y
+            #print closestCentroid
 
         #publish centroid point
         self.centroid_publish.publish(closestCentroid)
-        print "closest centroid:"
-        print "x = " + str(closestCentroid.point.x)
-        print "y = " + str(closestCentroid.point.y)
+        #print "closest centroid:"
+        #print "x = " + str(closestCentroid.point.x)
+        #print "y = " + str(closestCentroid.point.y)
 
     #calculate centroid of a frontier
     def calcCentroid(self, aFrontier):
         x_c = y_c = count = 0
-        print aFrontier
+        #print aFrontier
         for cell in aFrontier:
-            print "I'm in the for loop ahahhahah"
+            #print "I'm in the for loop ahahhahah"
             x_c = x_c + cell.x
             y_c = y_c + cell.y
             count = count + 1
 
+        #print count
+        #try: 
+
         x_c = x_c / count
         y_c = y_c / count
+        #except:
+        #    print count
+        #    print aFrontier
 
         centroid = PointStamped()
         centroid.point.x = x_c
@@ -100,8 +110,8 @@ class Centroid:
 
         return centroid
         #print "centroid: " + str(centroid.point.z)
-        print "x = " + str(centroid.point.x)
-        print "y = " + str(centroid.point.y)
+        #print "x = " + str(centroid.point.x)
+        #print "y = " + str(centroid.point.y)
 
     def calcDistance(self, PointStamped1, PointStamped2):
         #change in x
@@ -151,8 +161,8 @@ class Centroid:
         self.start.point.y = round(start_pos_y, 3)
         """
         robot_pos = PointStamped()
-        robot_pos.point.x = 0
-        robot_pos.point.y = 0
+        robot_pos.point.x = -1
+        robot_pos.point.y = -1.8
         robot_pos.header.frame_id = 'map'
 
         return robot_pos
