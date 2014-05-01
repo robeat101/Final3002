@@ -112,13 +112,16 @@ class BlobSearch:
                        L = self.f7(L)
                        for label in L:
                              linked[linked.index(label)] = set.union(linked[linked.index(label)] , *L)
-        print labels
-        # Second pass
-        for x in xrange(0, msg.info.width):
-            for y in xrange(0, msg.info.height):
-                if data[self.getMapIndex(x,y)] !=  Background:
-                    label = self.labels[self.getMapIndex(x,y)]        
-                    self.labels[self.getMapIndex(x,y)] = set.update(self.labels[self.getMapIndex(x,y)])    
+        #print self.labels
+        #=======================================================================
+        # # Second pass
+        # for x in xrange(0, msg.info.width):
+        #     for y in xrange(0, msg.info.height):
+        #         if data[self.getMapIndex(x,y)] !=  Background:
+        #             label = self.labels[self.getMapIndex(x,y)]        
+        #             self.labels[self.getMapIndex(x,y)] = set.update(self.labels[self.getMapIndex(x,y)])    
+        #=======================================================================
+        
         print "Done with both passes."
         print "publishing"
         self.publishGridCells(self.labels)
@@ -137,8 +140,6 @@ class BlobSearch:
                            
     def publishGridCells(self, nodes):
         #Initialize gridcell
-        
-        print str(nodes)
         gridcells = GridCells()
         gridcells.header.frame_id = 'map'
         gridcells.cell_width = self.msg.info.resolution
@@ -150,11 +151,20 @@ class BlobSearch:
         for i in xrange(0, len(nodes)): 
             if(nodes[i] == -1):
                 continue
+            elif(self.msg.data[i] == 100):
+                continue
+            else:
+                is_internal_count = True
+                for j in xrange(0, len(self.xy)): 
+                    continue #if()
+                #label = self.labels[i]
+                #point.z = label[0]
+                
             point = Point()
             point.x = self.getX(i)
             point.y = self.getY(i)
             #Ensure z axis is 0 (2d Map)
-            point.z = 0
+            
             gridcells.cells.append(point)        
         self.blob_publish.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
