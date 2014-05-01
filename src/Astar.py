@@ -440,6 +440,7 @@ class Astar:
         self.end = AStarNode(1,1.8);
         self.start = AStarNode(-1,-1.8)
         
+        self.publishGoal()
         self.map_available = False
         self.goal_set = False
         self.h_const = .4
@@ -458,6 +459,8 @@ class Astar:
         # Use this command to make the program wait for some seconds
         rospy.sleep(rospy.Duration(1, 0))
         print "AStar set up."
+        
+        
 
 
 
