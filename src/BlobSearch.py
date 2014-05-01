@@ -155,10 +155,19 @@ class BlobSearch:
                 continue
             else:
                 is_internal_count = True
+                x, y = self.getXYindex(i)
                 for j in xrange(0, len(self.xy)): 
-                    continue #if()
-                #label = self.labels[i]
-                #point.z = label[0]
+                    coord = self.xy[j]
+                    coord = (x + coord[0], y + coord[1])
+                    if(self.isValidPoint(coord[0], coord[1])):
+                        if(self.labels[i] == -1):
+                            is_internal_count = False
+                            break
+                
+                if(is_internal_count):
+                    continue
+                label = copy.deepcopy(self.labels[i])
+                point.z = label.pop()
                 
             point = Point()
             point.x = self.getX(i)
