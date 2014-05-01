@@ -181,6 +181,7 @@ class Centroid:
         self.labels = []
         self.odom_list = tf.TransformListener()
         self.robot_pos = PointStamped()
+        self.robotResolution = 0.2
         
         # Setup publisher and Subscriber
         sub = rospy.Subscriber('/rbefinal/blob', GridCells, self.getCentroid, queue_size=1)

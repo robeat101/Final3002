@@ -192,8 +192,9 @@ class Astar:
             
             # Check if we should abort search and navigate to unknown
             if(self.map.data[self.getMapIndex(current)] == -1):
-                self.end = current
-                print "Found shortcut to frontier"
+                if( not current.poseEqual(start)):
+                    self.end = current
+                    print "Found shortcut to frontier"
             #If the goal is being expanded
             if current.poseEqual(self.end):
                 #Construct path
