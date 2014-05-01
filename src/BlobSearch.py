@@ -152,6 +152,8 @@ class BlobSearch:
             return
         #Iterate through list of nodes
         for i in xrange(0, len(nodes)): 
+            if(nodes[i] == -1)
+                continue
             point = Point()
             point.x = self.getX(i)
             point.y = self.getY(i)
