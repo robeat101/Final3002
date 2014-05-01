@@ -47,7 +47,6 @@ class BlobSearch:
             label_val = self.labels[self.getMapIndex(neighbor[0], neighbor[1])]
             if label_val != -1:
                 label_values.append(label_val)
-                print "neighbor" + str(label_values)
         return label_values
         
     def isValidPoint(self,x,y):
@@ -102,7 +101,6 @@ class BlobSearch:
             for y in xrange(0, msg.info.height):
                 if data[self.getMapIndex(x, y)] != Background:
                     neighbors = self.getConnected(x,y)
-                    print "neighbors" + str(neighbors)
                     if neighbors == []:
                         linked.append(set([NextLabel]))                   
                         self.labels[self.getMapIndex(x,y)] = set([NextLabel])
@@ -110,15 +108,11 @@ class BlobSearch:
                     else:
                        # Find the smallest label
                        L = self.getLabels(neighbors)
-                       print "L" + str(L)
                        self.labels[self.getMapIndex(x,y)] = self.min(L)
-                       print self.labels[self.getMapIndex(x,y)]
                        L = self.f7(L)
                        for label in L:
-                           print "L:      " + str(L)
-                           print "linked: " + str(linked)
-                           print
-                           linked[linked.index(label)] = set.union(linked[linked.index(label)] , *L)
+                             linked[linked.index(label)] = set.union(linked[linked.index(label)] , *L)
+        print labels
         # Second pass
         for x in xrange(0, msg.info.width):
             for y in xrange(0, msg.info.height):
@@ -143,6 +137,8 @@ class BlobSearch:
                            
     def publishGridCells(self, nodes):
         #Initialize gridcell
+        
+        print str(nodes)
         gridcells = GridCells()
         gridcells.header.frame_id = 'map'
         gridcells.cell_width = self.msg.info.resolution
@@ -162,7 +158,7 @@ class BlobSearch:
             gridcells.cells.append(point)        
         self.blob_publish.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
-        print "Done frontier Search"
+        print "Done Blob Search"
         
     def __init__(self):
         # Initialize Node

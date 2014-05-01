@@ -1,7 +1,9 @@
 <launch>
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find final3002)/Config/config_astar.rviz"/>  
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find final3002)/Config/config_blob.rviz"/>  
     <node pkg="final3002" name="rbansal_vcunha_dbourque_MapOE" type="MapOE.py" output="screen"/>
  	<node pkg="final3002" name="rbansal_vcunha_dbourque_MapOpt" type="MapOpt.py" output="screen"/>
     <node pkg="final3002" name="rbansal_vcunha_dbourque_astar" type="Astar.py" output="screen"/>
+	<node pkg="final3002" name="rbansal_vcunha_dbourque_BlobSearch" type="BlobSearch.py" output="screen"/>
+
 </launch>
 
