@@ -127,17 +127,19 @@ class Centroid:
     #copied set_initial_pose function for this
     def get_robot_position(self):
         robotResolution = 0.2
-        """
         try:
             (trans, rot) = self.getOdomTransform()
         except:
             rospy.logwarn("Odometry Data unavailable. Using default start")
-            return
+            self.robot_pos = PointStamped()
+            self.robot_pos.point.x = -1
+            self.robot_pos.point.y = -1.8
+            self.robot_pos.header.frame_id = 'map'
+    
+            return self.robot_pos
         
         #rospy.spin()
-        self.start.point.x = trans[0]
-        self.start.point.y = trans[1]
-        self.start.orientation = rot
+        orientation = rot
         
         pose_x = trans[0]
         pose_y = trans[1]
@@ -157,15 +159,12 @@ class Centroid:
         else:
             start_pos_y = start_pos_y - (pose_y % self.robotResolution) + self.robotResolution
 
-        self.start.point.x = round(start_pos_x, 3)
-        self.start.point.y = round(start_pos_y, 3)
-        """
-        robot_pos = PointStamped()
-        robot_pos.point.x = -1
-        robot_pos.point.y = -1.8
-        robot_pos.header.frame_id = 'map'
+        self.robot_pos = PointStamped()
+        self.robot_pos.point.x = round(start_pos_x, 3)
+        self.robot_pos.point.y = round(start_pos_y, 3)
+        self.robot_pos.header.frame_id = 'map'
 
-        return robot_pos
+        return self.robot_pos
 
 
 
@@ -181,6 +180,8 @@ class Centroid:
         self.msg = None
         self.labels = []
         self.odom_list = tf.TransformListener()
+        self.robot_pos = PointStamped()
+        
         # Setup publisher and Subscriber
         sub = rospy.Subscriber('/rbefinal/blob', GridCells, self.getCentroid, queue_size=1)
         self.centroid_publish = rospy.Publisher('/rbefinal/centroidgoal', PointStamped, latch = True)
