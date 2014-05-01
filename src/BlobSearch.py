@@ -45,7 +45,7 @@ class BlobSearch:
         for neighbor in neighbors:
 
             label_val = self.labels[self.getMapIndex(neighbor[0], neighbor[1])]
-            if label_val != -1:
+            if label_val not in [-1, 100]:
                 label_values.append(label_val)
         return label_values
         
@@ -99,7 +99,7 @@ class BlobSearch:
         # First pass
         for x in xrange(0, msg.info.width):
             for y in xrange(0, msg.info.height):
-                if data[self.getMapIndex(x, y)] != Background:
+                if data[self.getMapIndex(x, y)] not in [100,-1]:
                     neighbors = self.getConnected(x,y)
                     if neighbors == []:
                         linked.append(set([NextLabel]))                   
@@ -163,12 +163,13 @@ class BlobSearch:
                     coord = (x + coord[0], y + coord[1])
                     coord = (round(coord[0]), round(coord[1]))
                     if(self.isValidPoint(coord[0], coord[1])):
-                        if(self.labels[self.getMapIndex(coord[0], coord[1])] == -1):
+                        if(self.labels[self.getMapIndex(coord[0], coord[1])] == -1 and self.msg.data[self.getMapIndex(coord[0], coord[1])] != 100):
                             is_internal_count = False
                             break
             
             if(is_internal_count):
                 continue
+            
             label = copy.deepcopy(self.labels[i])
             z = label.pop()
             print "getting point"
@@ -179,8 +180,7 @@ class BlobSearch:
             #Ensure z axis is 0 (2d Map)
             
             gridcells.cells.append(point)
-            
-                    
+        print self.labels    
         self.blob_publish.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
         print "Done Blob Search"
