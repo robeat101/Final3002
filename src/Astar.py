@@ -329,35 +329,35 @@ class Astar:
         NorthWest.step_direction = direction.nw
         
         if(self.getMapIndex(North) < len(map_data) and self.getMapIndex(North) > 0):
-            if (map_data[self.getMapIndex(North)] != 100):
+            if (map_data[self.getMapIndex(North)] not in [-1, 100] ):
                 possibleNodes.append(North)
                 
         if(self.getMapIndex(NorthEast) < len(map_data) and self.getMapIndex(NorthEast) > 0):
-            if (map_data[self.getMapIndex(NorthEast)] != 100):
+            if (map_data[self.getMapIndex(NorthEast)] not in [-1, 100]):
                 possibleNodes.append(NorthEast)
                 
         if(self.getMapIndex(East) < len(map_data) and self.getMapIndex(East) > 0):
-            if (map_data[self.getMapIndex(East)] != 100 ):
+            if (map_data[self.getMapIndex(East)] not in [-1, 100]):
                 possibleNodes.append(East)
                 
         if(self.getMapIndex(SouthEast) < len(map_data) and self.getMapIndex(SouthEast) > 0):
-            if (map_data[self.getMapIndex(SouthEast)] != 100):
+            if (map_data[self.getMapIndex(SouthEast)] not in [-1, 100]):
                 possibleNodes.append(SouthEast)
                 
         if(self.getMapIndex(South) < len(map_data) and self.getMapIndex(South) > 0):
-            if (map_data[self.getMapIndex(South)] != 100):
+            if (map_data[self.getMapIndex(South)] not in [-1, 100]):
                 possibleNodes.append(South)
                 
         if(self.getMapIndex(SouthWest) < len(map_data) and self.getMapIndex(SouthWest) > 0):
-            if (map_data[self.getMapIndex(SouthWest)] != 100):
+            if (map_data[self.getMapIndex(SouthWest)] not in [-1, 100]):
                 possibleNodes.append(SouthWest)
                 
         if(self.getMapIndex(West) < len(map_data) and self.getMapIndex(West) > 0):
-            if (map_data[self.getMapIndex(West)] != 100):
+            if (map_data[self.getMapIndex(West)] not in [-1, 100]):
                 possibleNodes.append(West)
                 
         if(self.getMapIndex(NorthWest) < len(map_data) and self.getMapIndex(NorthWest) > 0):
-            if (map_data[self.getMapIndex(NorthWest)] != 100):
+            if (map_data[self.getMapIndex(NorthWest)] not in [-1, 100]):
                 possibleNodes.append(NorthWest)
     
         return possibleNodes
