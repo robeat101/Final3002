@@ -9,6 +9,7 @@ from math import sqrt
 from __builtin__ import pow
 from genpy.rostime import Duration
 import numpy
+from numpy.matlib import rand
 
 class Centroid:
     def getCentroid(self, msg):
@@ -67,19 +68,31 @@ class Centroid:
             #set centroid to the location of the closest frontier cell to its centroid
             currentCentroid.point.x = closestCell.point.x
             currentCentroid.point.y = closestCell.point.y
-
             #determine distance from centroid to where robot is
             #check to see if this is closest so far to robot
+            self.centroidList.append(currentCentroid)
+            
             if closestCentroid.point.x == None and closestCentroid.point.y == None:
                 closestCentroid.point.x = currentCentroid.point.x
                 closestCentroid.point.y = currentCentroid.point.y    
             if self.calcDistance(currentCentroid,self.get_robot_position()) < self.calcDistance(closestCentroid,self.get_robot_position()):
                 closestCentroid.point.x = currentCentroid.point.x
                 closestCentroid.point.y = currentCentroid.point.y
+                
             #print closestCentroid
 
         #publish centroid point
-        self.centroid_publish.publish(closestCentroid)
+        self.centroid_publish1.publish(closestCentroid)
+        if(len(self.centroidList) > 1):
+            self.centroid_publish2.publish(self.centroidList[1])
+        else:
+            self.centroid_publish2.publish(self.centroidList[0])
+        if(len(self.centroidList) > 2):
+            self.centroid_publish3.publish(self.centroidList[2])
+        else:
+            self.centroid_publish2.publish(self.centroidList[0])
+
+        
         #print "closest centroid:"
         #print "x = " + str(closestCentroid.point.x)
         #print "y = " + str(closestCentroid.point.y)
@@ -182,10 +195,13 @@ class Centroid:
         self.odom_list = tf.TransformListener()
         self.robot_pos = PointStamped()
         self.robotResolution = 0.2
+        self.centroidList = []
         
         # Setup publisher and Subscriber
         sub = rospy.Subscriber('/rbefinal/blob', GridCells, self.getCentroid, queue_size=1)
-        self.centroid_publish = rospy.Publisher('/rbefinal/centroidgoal', PointStamped, latch = True)
+        self.centroid_publish1 = rospy.Publisher('/rbefinal/centroidgoal1', PointStamped, latch = True)
+        self.centroid_publish2 = rospy.Publisher('/rbefinal/centroidgoal2', PointStamped, latch = True)
+        self.centroid_publish3 = rospy.Publisher('/rbefinal/centroidgoal3', PointStamped, latch = True)
 
         
 # This is the program's main function

@@ -181,6 +181,10 @@ class BlobSearch:
             
             gridcells.cells.append(point)
         print self.labels    
+        
+        if(len(gridcells.cells) == 0):
+            rospy.loginfo("There are no more frontiers. Map is explored!")
+            rospy.spin()
         self.blob_publish.publish(gridcells)
         #rospy.sleep(rospy.Duration(0.05,0))
         print "Done Blob Search"

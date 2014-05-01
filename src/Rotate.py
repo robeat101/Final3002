@@ -6,7 +6,7 @@ Created, tested and maintained by Rohit for RBE 3002 Final Project
 import rospy
 import copy
 from nav_msgs.msg import OccupancyGrid
-
+from geometry_msgs.msg import Twist
 """
 The purpose of this node is to expand obstacles from the /map topic and
 publish the new map to /map_OE. All references to OE stand for 

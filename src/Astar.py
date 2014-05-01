@@ -78,9 +78,16 @@ class Astar:
         print "start_pos_x = ", self.start.point.x
         print "start_pos_y = ", self.start.point.y
         
-    
+    def set_goal_pose1 (self, msg):
+        self.set_goal_pose(msg, 1)
+        
+    def set_goal_pose2 (self, msg):
+        self.set_goal_pose(msg, 2)
+        
+    def set_goal_pose3 (self, msg):
+        self.set_goal_pose(msg, 3)  
     # Define goal pose
-    def set_goal_pose (self, msg):
+    def set_goal_pose (self, msg, num):
         print "set_goal_pos"
         
         end_pos_x = msg.point.x
@@ -97,12 +104,18 @@ class Astar:
         else:
             end_pos_y = msg.point.y - (msg.point.y % self.robotResolution) + self.robotResolution
             
-            
-        self.end.point.x = round(end_pos_x,3)
-        self.end.point.y = round(end_pos_y,3)
+        if num == 1:
+            self.end.point.x = round(end_pos_x,3)
+            self.end.point.y = round(end_pos_y,3)
+        elif num == 2:
+            self.end1.point.x = round(end_pos_x,3)
+            self.end1.point.y = round(end_pos_y,3)
+        elif num == 3:
+            self.end2.point.x = round(end_pos_x,3)
+            self.end2.point.y = round(end_pos_y,3)
         
-        print "end_pos_x = ", self.end.point.x
-        print "end_pos_y = ", self.end.point.y 
+        #print "end_pos_x = ", self.end.point.x
+        #print "end_pos_y = ", self.end.point.y 
         self.set_initial_pose()
         self.goal_set = True
         
@@ -126,9 +139,21 @@ class Astar:
         print self.end.point.y - self.start.point.y
         
         if path == [] or path == None:
+            self.noPaths  = self.noPaths + 1
             print "No Path!"
+            if(self.noPaths > 1):
+                self.publishGoal()
+            elif(self.noPaths > 2):
+                self.end = self.end1
+                self.publishGoal()
+            elif(self.noPaths > 4):
+                self.end = self.end2
+                self.publishGoal()
+            elif(self.noPaths > 6):
+                print "No path threshold crossed. Map explored."
             return None
         else:
+            self.noPaths  = 0
             print "Displaying Path"
             self.PublishGridCells(self.pub_path, path)
             rospy.sleep(rospy.Duration(1, 0))
@@ -438,6 +463,8 @@ class Astar:
         self.robotResolution = robotResolution
 
         self.end = AStarNode(1,1.8);
+        self.end1 =  AStarNode(1,1.8);
+        self.end2 =  AStarNode(1,1.8);
         self.start = AStarNode(-1,-1.8)
         
         self.map_available = False
@@ -445,12 +472,16 @@ class Astar:
         self.h_const = .4
         self.map = None
         self.orientation = None
+        self.noPaths = 0
         
         
         # Set up odometry listener 
         self.odom_list = tf.TransformListener()
         
-        sub = rospy.Subscriber('/rbefinal/centroidgoal', PointStamped, self.set_goal_pose, queue_size=1)  
+        sub = rospy.Subscriber('/rbefinal/centroidgoal1', PointStamped, self.set_goal_pose1, queue_size=1)  
+        sub = rospy.Subscriber('/rbefinal/centroidgoal2', PointStamped, self.set_goal_pose2, queue_size=1)  
+        sub = rospy.Subscriber('/rbefinal/centroidgoal3', PointStamped, self.set_goal_pose3, queue_size=1)  
+        
         sub = rospy.Subscriber('/rbefinal/map_Opt', OccupancyGrid, self.map_function, queue_size=1)
         sub = rospy.Subscriber('/odom', Odometry, self.readOdom, queue_size=5)
         
