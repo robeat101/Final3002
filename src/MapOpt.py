@@ -58,13 +58,17 @@ class MapOpt:
                         if(map.data[index] > 0):
                             cost = cost + map.data[index]
                         elif(map.data[index] == 0):
-                            cost = cost + 0
+                            cost = cost + 2
                         else:
                             cost = cost + -1
                         nodes = nodes+1
                 cost = cost/nodes
-                if(cost > 60 ):
+                if(cost > 3 ):
                     cost = 100
+                elif(cost < 0):
+                    cost = -1
+                else:
+                    cost = 0
                 new_data[y * map_scaled_width + x] = cost
                 
         
